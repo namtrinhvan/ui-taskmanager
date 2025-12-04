@@ -1,0 +1,255 @@
+// --- Variables ---
+$c-bg: #F7F9FC;
+$c-surface: #FFFFFF;
+$c-border: #DADCE0;
+$c-text-main: #202124;
+$c-text-sec: #5F6368;
+$c-blue: #1A73E8;
+$c-green: #34A853;
+$c-yellow: #FBBC04;
+$c-highlight-bg: #FEF7E0; // Màu nền highlight cho Task tham gia
+$c-action-mine-bg: #E8F0FE; // Màu nền highlight cho Action của tôi
+
+$font-std: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+.container {
+  font-family: $font-std;
+  padding: 24px;
+  background: $c-bg;
+  min-height: 100vh;
+  color: $c-text-main;
+}
+
+// --- Header ---
+.pageHeader {
+  margin-bottom: 24px;
+  h1 {
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 4px 0;
+    color: $c-text-main;
+    .iconHeader { color: $c-blue; }
+  }
+  .breadcrumb {
+    font-size: 0.9rem;
+    color: $c-text-sec;
+  }
+}
+
+// --- Plan List ---
+.planList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// --- Card Styles ---
+.card {
+  background: $c-surface;
+  border-radius: 12px;
+  border: 1px solid $c-border;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+
+  &.expanded {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: $c-blue;
+    .cardHeader {
+      background: #F8F9FA;
+      border-bottom: 1px solid $c-border;
+    }
+  }
+}
+
+.cardHeader {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  &:hover { background: #fafafa; }
+
+  .cardTitle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    .iconPlan { color: $c-text-sec; font-size: 1.2rem; }
+    .planName { font-weight: 600; font-size: 1.05rem; }
+
+    // Status Badge Style
+    .statusBadge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.75rem; padding: 4px 10px; border-radius: 16px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+  }
+
+  .cardMeta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: $c-text-sec;
+    font-size: 0.9rem;
+    .chevron { transition: transform 0.2s; &.rotate { transform: rotate(180deg); } }
+  }
+}
+
+.cardBody {
+  padding: 20px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// --- Toolbar inside Card ---
+.toolbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+
+  .filterWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: $c-text-sec;
+
+    .dropdownFilter {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid $c-blue;
+      outline: none;
+      font-size: 0.9rem;
+      color: $c-blue;
+      background: white;
+      font-weight: 500;
+      cursor: pointer;
+      &:hover { background: #F1F3F4; }
+    }
+  }
+}
+
+// --- Task Table ---
+.tableContainer {
+  border: 1px solid $c-border;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.tableHeader {
+  display: flex;
+  background: #F8F9FA;
+  padding: 12px 16px;
+  border-bottom: 1px solid $c-border;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: $c-text-sec;
+  .colName { flex: 3; }
+  .colStatus { width: 15%; text-align: center; }
+  .colProgress { width: 15%; text-align: right; }
+}
+
+.emptyState { padding: 30px; text-align: center; color: $c-text-sec; font-style: italic; }
+
+// --- Task Row ---
+.taskRowWrapper {
+  border-bottom: 1px solid #eee;
+  background: white;
+  transition: background 0.2s;
+
+  &.taskExpanded { border-bottom: 1px solid transparent; }
+
+  // Highlight Style (Khi chọn Tất cả & có tham gia)
+  &.highlightedTask {
+    background: $c-highlight-bg;
+    .taskRowMain {
+      border-left: 4px solid #FBBC04;
+      padding-left: 12px; // Bù trừ cho border
+    }
+  }
+}
+
+.taskRowMain {
+  display: flex;
+  padding: 14px 16px;
+  align-items: center;
+  cursor: pointer;
+
+  &:hover { background: rgba(0,0,0,0.02); }
+
+  .colName {
+    flex: 3; display: flex; align-items: center; gap: 10px;
+    .chevronIcon { color: $c-text-sec; font-size: 0.8rem; width: 16px; }
+    .starIcon { color: #FBBC04; font-size: 1rem; }
+    .taskName { font-weight: 500; color: $c-text-main; font-size: 0.95rem; line-height: 1.4; }
+  }
+
+  .colStatus {
+    width: 15%; text-align: center;
+    .badge { padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+  }
+
+  .colProgress {
+    width: 15%; display: flex; align-items: center; gap: 8px; justify-content: flex-end;
+    .progressBar { width: 80px; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+    .progressFill { height: 100%; background: $c-blue; }
+    .progressText { font-size: 0.8rem; color: $c-text-sec; width: 30px; text-align: right; }
+  }
+}
+
+// --- Action Detail Panel ---
+.actionDetailPanel {
+  padding: 16px 24px;
+  background: #fdfdfd;
+  border-top: 1px solid #eee;
+  box-shadow: inset 0 4px 6px -4px rgba(0,0,0,0.05);
+
+  .actionHeaderTitle {
+    font-size: 0.85rem; color: $c-blue; font-weight: 700; text-transform: uppercase;
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+}
+
+.actionTable {
+  width: 100%; border-collapse: collapse; font-size: 0.9rem;
+  background: white; border: 1px solid $c-border; border-radius: 6px;
+
+  th { background: #fff; text-align: left; padding: 10px 16px; color: $c-text-sec; font-weight: 600; font-size: 0.8rem; border-bottom: 1px solid $c-border; }
+  td { padding: 10px 16px; border-bottom: 1px solid #eee; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+}
+
+.actionRow {
+  &.myActionRow {
+    background: $c-action-mine-bg;
+    td { color: $c-blue; }
+    .actionNameCell { font-weight: 500; }
+  }
+
+  .actionNameCell {
+    display: flex; align-items: center; gap: 8px;
+    .myTag { background: $c-blue; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
+  }
+
+  .executor { font-style: italic; color: $c-text-sec; font-size: 0.85rem; }
+
+  .actionStatus {
+    font-size: 0.75rem; background: #eee; padding: 2px 8px; border-radius: 12px; color: #555;
+  }
+
+  .controlCell {
+    display: flex; align-items: center; gap: 4px;
+    .inputProgress { width: 40px; padding: 4px; border: 1px solid $c-border; border-radius: 4px; text-align: center; font-weight: 600; outline: none; &:focus { border-color: $c-blue; } }
+    .percent { font-size: 0.8rem; color: $c-text-sec; }
+  }
+
+  .readOnlyText { color: $c-text-sec; font-weight: 500; }
+}

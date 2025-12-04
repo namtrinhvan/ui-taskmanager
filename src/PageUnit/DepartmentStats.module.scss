@@ -1,0 +1,322 @@
+.statsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 24px 0;
+  background-color: #f8fafc; // Slate-50
+  //////border-radius: 8px;
+}
+
+.standaloneCard {
+  display: grid;
+  grid-template-columns: 1fr  1fr 1fr;
+  gap: 2px;
+}
+
+// --- KPI GRID ---
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 2px;
+}
+
+.kpiCard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  //////border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.kpiHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.kpiLabel {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.iconBox {
+  width: 36px;
+  height: 36px;
+  //////border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+
+  &.blueBg {
+    background-color: #3b82f6;
+    color: #fff;
+  }
+
+  &.greenBg {
+    background-color: #10b981;
+    color: #fff;
+  }
+
+  &.orangeBg {
+    background-color: #f59e0b;
+    color: #fff;
+  }
+
+  &.redBg {
+    background-color: #ef4444;
+    color: #fff;
+  }
+
+  &.purpleBg {
+    background-color: #8b5cf6;
+    color: #fff;
+  }
+}
+
+.kpiValue {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.kpiSub {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 12px;
+
+}
+
+.link {
+  width: 100%;
+  text-align: right;
+  color: dodgerblue;
+  font-size: 0.9rem !important;
+  font-weight: 400;
+  margin-top: auto;
+}
+
+.success {
+  color: #16a34a;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.warning {
+  color: #d97706;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.danger {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.neutral {
+  color: #64748b;
+}
+
+.progressBarBg {
+  width: 100%;
+  height: 6px;
+  background-color: #f1f5f9;
+  //////border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  //////border-radius: 3px;
+  transition: width 0.5s ease-out;
+}
+
+// --- CHARTS GRID ---
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chartCard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  //////border-radius: 12px;
+  padding: 20px;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+
+  h4 {
+    margin: 0;
+    font-size: 16px;
+    color: #334155;
+    font-weight: 600;
+  }
+
+  .headerIcon {
+    color: #64748b;
+  }
+}
+
+.chartWrapper {
+  flex: 1;
+  min-height: 0; // Fix flex overflow issue
+}
+
+// --- RISK SECTION ---
+.riskSection {
+  background: #fff;
+  border: 1px solid #fee2e2; // Light red border
+  //////border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.05);
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #b91c1c; // Dark red
+    font-weight: 700;
+  }
+}
+
+.riskTableContainer {
+  overflow-x: auto;
+}
+
+.riskTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th {
+    text-align: left;
+    padding: 12px;
+    background-color: #fef2f2;
+    color: #991b1b;
+    font-weight: 600;
+    border-bottom: 2px solid #fee2e2;
+  }
+
+  td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.fwBold {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.textDanger {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.badgeExt {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10px;
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #ffedd5;
+  padding: 1px 6px;
+  //////border-radius: 4px;
+}
+
+.miniProgress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .bar {
+    height: 6px;
+    width: 60px;
+    //////border-radius: 3px;
+  }
+
+  span {
+    font-size: 12px;
+    color: #64748b;
+    min-width: 30px;
+  }
+}
+
+// --- TASK STATUSES BREAKDOWN (Cho card Hạng mục trong tháng) ---
+.taskStatuses {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; // Khoảng cách giữa các dòng trạng thái
+  margin-top: 10px;
+  margin-bottom: 15px;
+  padding-top: 10px;
+  border-top: 1px dashed #e2e8f0; // Đường kẻ phân cách nhẹ với con số tổng
+}
+
+.taskStatus {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #475569; // Slate-600
+  font-weight: 500;
+}
+
+.taskStatusIcon {
+  width: 10px;
+  height: 10px;
+  //////border-radius: 2px; // Bo góc nhẹ cho icon vuông, hoặc 50% nếu muốn hình tròn
+  flex-shrink: 0; // Đảm bảo icon không bị co lại
+}
+
+// --- RESPONSIVE TWEAKS (Optional) ---
+@media (max-width: 768px) {
+  .standaloneCard {
+    grid-template-columns: 1fr; // Chuyển về 1 cột trên mobile
+  }
+
+  .statsContainer {
+    padding: 16px;
+  }
+}

@@ -1,0 +1,376 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+// --- GOOGLE MATERIAL VARIABLES ---
+$bg-color: #f8f9fa;             // Màu nền tổng thể xám rất nhạt
+$sidebar-bg: #ffffff;           // Sidebar trắng
+$sidebar-width-open: 256px;
+$sidebar-width-closed: 72px;    // Rộng hơn chút để icon thoáng
+$header-height: 64px;
+
+// Colors
+$text-primary: #3c4043;         // Xám đen Google
+$text-secondary: #5f6368;       // Xám vừa
+$primary-blue: #1a73e8;         // Xanh Google
+$active-bg: #e8f0fe;            // Nền xanh nhạt khi active
+$active-text: #1967d2;          // Chữ xanh khi active
+$hover-bg: #f1f3f4;             // Nền xám khi hover
+$divider-color: #dadce0;        // Đường kẻ
+
+// Transitions
+$transition-std: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+.pageWrapper {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: $bg-color;
+  font-family: 'Roboto', sans-serif;
+  color: $text-primary;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+  background-color: $sidebar-bg;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  border-right: none; // Google style ít dùng border rõ, nhưng ở web app nên có border nhẹ
+  box-shadow: 1px 0 0 0 $divider-color; // Fake border
+  z-index: 10;
+
+  &.open {
+    width: $sidebar-width-open;
+  }
+
+  &.closed {
+    width: $sidebar-width-closed;
+
+    .brandContainer, .sectionLabel, .label, .toggleIcon, .composeBtn {
+      display: none;
+    }
+
+    .menuItem {
+      padding-right: 0 !important;
+      justify-content: center;
+      width: 48px;
+      margin: 4px auto;
+      border-radius: 50%; // Biến thành hình tròn khi đóng
+    }
+
+    .iconContainer {
+      margin-right: 0;
+    }
+  }
+}
+
+.sidebarHeader {
+  height: $header-height;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 0 24px;
+
+  .brandContainer {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .brandLogo {
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: $text-secondary;
+  }
+
+  .brandText {
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: $text-secondary;
+    position: relative;
+    top: 1px;
+  }
+
+  .toggleBtn {
+    background: transparent;
+    border: none;
+    color: $text-secondary;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: rgba(60, 64, 67, 0.08);
+    }
+  }
+}
+
+.navContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+
+  // Thanh cuộn tinh tế
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #dadce0;
+    border-radius: 4px;
+  }
+}
+
+// Nút "New Task" giả lập Google Drive
+.composeBtnPlaceholder {
+  padding: 0 16px 16px 16px;
+}
+.composeBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #fff;
+  box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+  border-radius: 16px; // Pill shape
+  padding: 12px 20px 12px 16px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, background-color 0.2s;
+  width: fit-content;
+
+  &:hover {
+    box-shadow: 0 4px 8px 3px rgba(60,64,67,0.15);
+    background-color: #fcfcfc;
+  }
+
+  .plusIcon {
+    font-size: 24px;
+    line-height: 1;
+    font-weight: 400;
+    color: #ea4335; // Google Red accent
+  }
+
+  span:last-child {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: $text-primary;
+  }
+}
+
+.sectionLabel {
+  padding: 0 24px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.divider {
+  height: 1px;
+  background-color: $divider-color;
+  margin: 8px 0;
+}
+
+/* --- MENU ITEMS --- */
+// Google Material style: Rounded Pill active state
+.menuItem {
+  display: flex;
+  align-items: center;
+  height: 40px; // Chiều cao chuẩn Google list item
+  margin: 0 0 0 0; // margin right cho pill shape
+  padding-right: 12px;
+  border-radius: 0 20px 20px 0; // Pill shape chỉ bo bên phải
+  cursor: pointer;
+  color: $text-primary;
+  transition: $transition-std;
+  user-select: none;
+  font-size: 0.9rem;
+  font-weight: 400;
+
+  // Margin để tạo cảm giác thụt vào cho pill shape
+  margin-right: 16px;
+
+  &:hover {
+    background-color: $hover-bg;
+    color: $text-primary;
+  }
+
+  &.active {
+    background-color: $active-bg;
+    color: $active-text;
+    font-weight: 500;
+
+    .iconContainer {
+      color: $active-text;
+    }
+
+    // Icon khi active thường đậm hơn hoặc đổi thành fill (tuỳ library)
+    svg {
+      stroke-width: 2.5px;
+    }
+  }
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  color: $text-secondary; // Icon màu xám mặc định
+  flex-shrink: 0;
+}
+
+.label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toggleIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: $text-secondary;
+
+  &:hover {
+    background-color: rgba(0,0,0,0.06);
+  }
+}
+
+.subLevelContainer {
+  // Không cần background tối như bản cũ, giữ clean
+  transition: max-height 0.3s ease;
+}
+
+.loadingState {
+  padding: 16px 24px;
+  font-size: 0.85rem;
+  color: $text-secondary;
+  font-style: italic;
+}
+
+/* --- MAIN CONTENT --- */
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+  justify-content: flex-start;
+}
+
+.topHeader {
+  height: $header-height;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid transparent; // Header liền mạch
+}
+
+/* --- BREADCRUMBS --- */
+.breadcrumbContainer {
+  display: flex;
+  align-items: center;
+  font-size: 18px; // Tiêu đề to hơn kiểu Google Fonts header
+  color: $text-secondary;
+}
+
+.breadcrumbHome {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  color: $text-secondary;
+
+  &:hover {
+    background-color: $hover-bg;
+    color: $text-primary;
+  }
+}
+
+.crumbSeparator {
+  margin: 0 8px;
+  color: #9aa0a6;
+  font-size: 1.2rem;
+}
+
+.crumbItem {
+  cursor: pointer;
+  color: $text-secondary;
+  transition: color 0.2s;
+
+  &:hover {
+    color: $primary-blue;
+    text-decoration: underline;
+  }
+
+  &.crumbActive {
+    color: #202124; // Màu đen gần tuyệt đối
+    font-weight: 400; // Google dùng regular cho title
+    cursor: default;
+
+    &:hover {
+      text-decoration: none;
+      color: #202124;
+    }
+  }
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  background-color: #a50e0e; // Deep red avatar
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 16px;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+}
+
+.pageBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 32px;
+  border: 1px solid #808080;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #dadce0;
+    border-radius: 4px;
+  }
+}

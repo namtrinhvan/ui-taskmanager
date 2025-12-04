@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Quicksand:wght@300..700&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    background: white;
+}
+
+html {
+
+}
+
+* {
+    font-family: "Quicksand", Roboto, Arial, sans-serif !important;
+}
+
+body {
+    margin: 0 !important;
+    width: 100%;
+    height: 100%;
+    overscroll-behavior: none;
+}
