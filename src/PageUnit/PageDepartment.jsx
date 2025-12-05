@@ -19,8 +19,7 @@ const PageDepartment = () => {
                 </div>
                 <div className={styles.sectionContent}></div>
             </div>
-        </div>
-    );
+        </div>);
 };
 
 export default PageDepartment;
