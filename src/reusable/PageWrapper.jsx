@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import axiosInstance from '../reusable/axiosInstance';
 import styles from './PageWrapper.module.scss';
+import {AiOutlineTeam} from "react-icons/ai";
+import {GrGroup} from "react-icons/gr";
 
 const PageWrapper = ({ children }) => {
     // --- LOGIC GIỮ NGUYÊN ---
@@ -90,11 +92,11 @@ const PageWrapper = ({ children }) => {
         const effectiveLevel = level !== undefined ? level : depth;
         // Icon style google fonts: mỏng nhẹ
         const props = { strokeWidth: 2, size: 18 };
-
-        if (effectiveLevel === 0) return <Briefcase {...props} />;
-        if (effectiveLevel === 1) return <Users {...props} />;
-        if (effectiveLevel === 2) return <Zap {...props} />;
-        return <Circle size={10} strokeWidth={3} />;
+        console.log(effectiveLevel)
+        if (effectiveLevel === 'DEPARTMENT') return <GrGroup  {...props} />;
+        if (effectiveLevel === 'GROUP') return <Users {...props} />;
+        if (effectiveLevel === 'FUNCTION') return <AiOutlineTeam {...props} />;
+        return <AiOutlineTeam size={15} strokeWidth={3} />;
     };
 
     const renderUnitNode = (node, depth = 0) => {
@@ -190,18 +192,8 @@ const PageWrapper = ({ children }) => {
                 </div>
 
                 <nav className={styles.navContent}>
-                    {/* Nút to kiểu "New" của Google Drive - Mockup trang trí */}
-                    {isSidebarOpen && (
-                        <div className={styles.composeBtnPlaceholder}>
-                            <div className={styles.composeBtn}>
-                                <span className={styles.plusIcon}>+</span>
-                                <span>New Task</span>
-                            </div>
-                        </div>
-                    )}
 
                     <div className={styles.sectionLabel}>{isSidebarOpen ? 'Tổng quan' : ''}</div>
-
                     <div
                         className={`${styles.menuItem} ${location.pathname === '/org-chart' ? styles.active : ''}`}
                         onClick={() => navigate('/org-chart')}
