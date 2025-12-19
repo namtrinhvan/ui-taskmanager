@@ -1,327 +1,311 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
+import axiosInstance from '../reusable/axiosInstance';
 import styles from './TaskManagement.module.scss';
-import {
-    FaTasks,
-    FaChevronDown,
-    FaChevronRight,
-    FaCalendarAlt,
-    FaList,
-    FaStar,
-    FaFilter,
-    FaRegCheckCircle,
-    FaHistory
-} from "react-icons/fa";
-import { FiActivity, FiTarget, FiCheckSquare } from "react-icons/fi";
 
-// --- 1. MOCK DATA SOURCE (FROM IMAGE) ---
-const SOURCE_TASKS = [
-    "THANH TOÁN, NGHIỆM THU",
-    "VẬN HÀNH XE BUS",
-    "KẾ HOẠCH CÔNG VIỆC",
-    "DỰ ÁN ĐỘT PHÁ",
-];
-
-// --- CONSTANTS ---
-const PLAN_STATUS_CONFIG = {
-    IN_PROGRESS: { label: "Đang thực hiện", color: "#3498db", bg: "#eaf2f8", icon: <FiActivity/> },
-    FINISHED: { label: "Đã kết thúc", color: "#7f8c8d", bg: "#f2f3f4", icon: <FaRegCheckCircle/> },
-};
-
-const TASK_STATUS_CONFIG = {
-    PENDING: { label: "Chờ xử lý", color: "#f1c40f", bg: "#fef9e7" },
-    IN_PROGRESS: { label: "Đang làm", color: "#3498db", bg: "#eaf2f8" },
-    COMPLETED: { label: "Hoàn thành", color: "#2ecc71", bg: "#eafaf1" },
-};
-
-// Mock 3 Plans specific naming
-const MOCK_PLANS = [
-    {
-        id: 1,
-        name: "TDS OP- VH- DVHS-KHCV NĂM 2024 - 2025",
-        start: "2024-08", end: "2025-05",
-        status: "IN_PROGRESS"
-    },
-    {
-        id: 2,
-        name: "TDS OP- VH- DVHS-KHCV NĂM 2023 - 2024",
-        start: "2023-08", end: "2024-05",
-        status: "FINISHED"
-    },
-    {
-        id: 3,
-        name: "TDS OP- VH- DVHS-KHCV NĂM 2022 - 2023",
-        start: "2022-08", end: "2023-05",
-        status: "FINISHED"
-    },
-];
-
-// Helper: Sinh Action dựa trên tên Task (Context aware mock)
-const generateActionsForTask = (taskName, isTaskParticipating) => {
-    const actions = [];
-    const count = Math.floor(Math.random() * 3) + 1; // 1-3 actions
-
-    for (let i = 0; i < count; i++) {
-        // Nếu Task mình tham gia, thì khả năng cao Action trong đó là của mình
-        const isMyAction = isTaskParticipating ? Math.random() < 0.7 : false;
-
-        actions.push({
-            id: `act_${Math.random()}`,
-            name: `Hành động cụ thể ${i+1}: ${taskName.substring(0, 20)}...`,
-            executor: isMyAction ? "Tôi" : "Nguyễn Văn A",
-            isMine: isMyAction,
-            progress: isMyAction ? Math.floor(Math.random() * 80) : 100,
-            status: ["PENDING", "IN_PROGRESS", "COMPLETED"][Math.floor(Math.random() * 3)]
-        });
-    }
-    return actions;
-};
-
-// Helper: Sinh danh sách Task từ Source Image
-const generateMockData = (plan) => {
-    return SOURCE_TASKS.map((name, index) => {
-        const isParticipating = Math.random() < 0.5; // 50% tỉ lệ tham gia
-        return {
-            id: `task_${plan.id}_${index}`,
-            name: name,
-            month: "2024-09", // Mock month
-            status: ["PENDING", "IN_PROGRESS", "COMPLETED"][Math.floor(Math.random() * 3)],
-            progress: Math.floor(Math.random() * 100),
-            isParticipating: isParticipating, // Quan trọng: Cờ đánh dấu có tham gia hay không
-            actions: generateActionsForTask(name, isParticipating)
-        };
-    });
-};
-
-// =============================================================================
-// COMPONENT: TaskManagement
-// =============================================================================
 const TaskManagement = () => {
-    const [expandedPlanId, setExpandedPlanId] = useState(MOCK_PLANS[0].id);
+    // --- STATE ---
+    const [staffList, setStaffList] = useState([]);
+    const [currentStaffId, setCurrentStaffId] = useState('');
 
-    return (
-        <div className={styles.container}>
-            <div className={styles.pageHeader}>
-                <h1><FaTasks className={styles.iconHeader}/> Công việc của tôi</h1>
-            </div>
-            <div className={styles.planList}>
-                {MOCK_PLANS.map(plan => (
-                    <PlanCard
-                        key={plan.id}
-                        plan={plan}
-                        isExpanded={expandedPlanId === plan.id}
-                        onToggle={() => setExpandedPlanId(prev => prev === plan.id ? null : plan.id)}
-                    />
-                ))}
-            </div>
-        </div>
-    );
-};
+    // View State: 'list' | 'detail'
+    const [viewMode, setViewMode] = useState('list');
+    const [selectedPlan, setSelectedPlan] = useState(null);
+    const [planTaskGroups, setPlanTaskGroups] = useState([]); // Dữ liệu chi tiết plan
 
-// =============================================================================
-// SUB-COMPONENT: PlanCard
-// =============================================================================
-const PlanCard = ({ plan, isExpanded, onToggle }) => {
-    // Filter State: 'ALL' (Tất cả) hoặc 'PARTICIPATING' (Tham gia)
-    const [filterCategory, setFilterCategory] = useState('ALL');
+    const [loading, setLoading] = useState(false);
 
-    // Data State
-    const [allTasks, setAllTasks] = useState([]);
+    // Create Action State
+    const [showActionModal, setShowActionModal] = useState(false);
+    const [targetTaskId, setTargetTaskId] = useState(null);
+    const [newAction, setNewAction] = useState({name: '', description: '', deadline: ''});
+
+    // --- INITIAL LOAD ---
+    useEffect(() => {
+        fetchStaffList();
+    }, []);
 
     useEffect(() => {
-        // Chỉ sinh data 1 lần khi mount hoặc plan change
-        setAllTasks(generateMockData(plan));
-    }, [plan]);
-
-    // Logic Lọc hiển thị
-    const visibleTasks = useMemo(() => {
-        if (filterCategory === 'PARTICIPATING') {
-            return allTasks.filter(t => t.isParticipating);
+        if (currentStaffId) {
+            // Reset về list khi đổi nhân vật
+            setViewMode('list');
+            setSelectedPlan(null);
+            fetchMyPlans();
         }
-        return allTasks; // 'ALL' -> Trả về hết (nhưng sẽ highlight ở UI)
-    }, [allTasks, filterCategory]);
+    }, [currentStaffId]);
 
-    const planStatus = PLAN_STATUS_CONFIG[plan.status];
+    // --- API CALLS ---
 
-    return (
-        <div className={`${styles.card} ${isExpanded ? styles.expanded : ''}`}>
-            {/* --- CARD HEADER --- */}
-            <div className={styles.cardHeader} onClick={onToggle}>
-                <div className={styles.cardTitle}>
-                    <FiTarget className={styles.iconPlan}/>
-                    <span className={styles.planName}>{plan.name}</span>
-
-                    {/* Status Badge thay cho Role */}
-                    <span
-                        className={styles.statusBadge}
-                        style={{ backgroundColor: planStatus.bg, color: planStatus.color }}
-                    >
-                        {planStatus.icon} {planStatus.label}
-                    </span>
-                </div>
-                <div className={styles.cardMeta}>
-                    <FaCalendarAlt/> {plan.start} — {plan.end}
-                    <div className={`${styles.chevron} ${isExpanded ? styles.rotate : ''}`}>
-                        <FaChevronDown/>
-                    </div>
-                </div>
-            </div>
-
-            {/* --- CARD BODY --- */}
-            {isExpanded && (
-                <div className={styles.cardBody}>
-                    {/* TOOLBAR */}
-                    <div className={styles.toolbar}>
-                        <div className={styles.filterWrapper}>
-                            <label><FaFilter/> Lọc hạng mục:</label>
-                            <select
-                                value={filterCategory}
-                                onChange={(e) => setFilterCategory(e.target.value)}
-                                className={styles.dropdownFilter}
-                            >
-                                <option value="ALL">Tất cả (Highlight mục tham gia)</option>
-                                <option value="PARTICIPATING">Chỉ mục tôi Tham gia</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* TABLE */}
-                    <div className={styles.tableContainer}>
-                        <div className={styles.tableHeader}>
-                            <div className={styles.colName}>Hạng mục công việc</div>
-                            <div className={styles.colStatus}>Trạng thái</div>
-                            <div className={styles.colProgress}>Tiến độ</div>
-                        </div>
-
-                        {visibleTasks.length === 0 ? (
-                            <div className={styles.emptyState}>Không có hạng mục nào phù hợp.</div>
-                        ) : (
-                            <div className={styles.tableBody}>
-                                {visibleTasks.map(task => (
-                                    <TaskRow
-                                        key={task.id}
-                                        task={task}
-                                        highlight={filterCategory === 'ALL' && task.isParticipating}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
-// =============================================================================
-// SUB-COMPONENT: TaskRow
-// =============================================================================
-const TaskRow = ({ task, highlight }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-    const statusInfo = TASK_STATUS_CONFIG[task.status];
-
-    return (
-        <div className={`${styles.taskRowWrapper} ${isExpanded ? styles.taskExpanded : ''} ${highlight ? styles.highlightedTask : ''}`}>
-            {/* Main Row */}
-            <div className={styles.taskRowMain} onClick={() => setIsExpanded(!isExpanded)}>
-                <div className={styles.colName}>
-                    <div className={styles.chevronIcon}>
-                        {isExpanded ? <FaChevronDown/> : <FaChevronRight/>}
-                    </div>
-
-                    {/* Nếu đang highlight (chế độ xem Tất cả), hiện ngôi sao */}
-                    {highlight && <FaStar className={styles.starIcon} title="Bạn có tham gia mục này"/>}
-
-                    <span className={styles.taskName}>{task.name}</span>
-                </div>
-
-                <div className={styles.colStatus}>
-                    <span className={styles.badge} style={{background: statusInfo.bg, color: statusInfo.color}}>
-                        {statusInfo.label}
-                    </span>
-                </div>
-
-                <div className={styles.colProgress}>
-                    <div className={styles.progressBar}>
-                        <div className={styles.progressFill} style={{width: `${task.progress}%`}}></div>
-                    </div>
-                    <span className={styles.progressText}>{task.progress}%</span>
-                </div>
-            </div>
-
-            {/* Expanded Actions */}
-            {isExpanded && (
-                <div className={styles.actionDetailPanel}>
-                    <div className={styles.actionHeaderTitle}>
-                        <FiCheckSquare/> Hành động cụ thể
-                    </div>
-                    <table className={styles.actionTable}>
-                        <thead>
-                        <tr>
-                            <th width="45%">Tên hành động</th>
-                            <th width="20%">Người thực hiện</th>
-                            <th width="15%">Trạng thái</th>
-                            <th width="20%">Cập nhật tiến độ</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {task.actions.map(action => (
-                            <ActionRow key={action.id} action={action} />
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-        </div>
-    );
-};
-
-// =============================================================================
-// SUB-COMPONENT: ActionRow
-// =============================================================================
-const ActionRow = ({ action }) => {
-    const [progress, setProgress] = useState(action.progress);
-    const isMine = action.isMine;
-
-    const handleProgressChange = (e) => {
-        let val = parseInt(e.target.value);
-        if (val > 100) val = 100;
-        if (val < 0) val = 0;
-        setProgress(val);
+    const fetchStaffList = async () => {
+        try {
+            const res = await axiosInstance.get('/staff'); //
+            setStaffList(res.data);
+            if (res.data.length > 0) setCurrentStaffId(res.data[0].id);
+        } catch (error) {
+            console.error("Error fetching staff:", error);
+        }
     };
 
-    return (
-        <tr className={`${styles.actionRow} ${isMine ? styles.myActionRow : ''}`}>
-            <td>
-                <div className={styles.actionNameCell}>
-                    {isMine && <span className={styles.myTag}>Của tôi</span>}
-                    {action.name}
+    // Lấy danh sách Plan mà user tham gia
+    const [myPlans, setMyPlans] = useState([]);
+    const fetchMyPlans = async () => {
+        setLoading(true);
+        try {
+            const res = await axiosInstance.get('/my-work/plans', {
+                params: {staffId: currentStaffId} //
+            });
+            setMyPlans(res.data);
+        } catch (error) {
+            console.error("Error fetching plans:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Lấy chi tiết Plan (Cấu trúc TaskGroup)
+    const fetchPlanDetails = async (planId) => {
+        setLoading(true);
+        try {
+            // Sử dụng API lấy structure của Plan giống PageDepartment
+            const res = await axiosInstance.get(`/task/plan/${planId}`); //
+            setPlanTaskGroups(res.data);
+        } catch (error) {
+            console.error("Error fetching plan details:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- HANDLERS ---
+
+    const handlePlanClick = (plan) => {
+        setSelectedPlan(plan);
+        setViewMode('detail');
+        fetchPlanDetails(plan.id);
+    };
+
+    const handleBackToList = () => {
+        setViewMode('list');
+        setSelectedPlan(null);
+        setPlanTaskGroups([]);
+    };
+
+    const handleToggleAction = async (actionId, currentStatus) => {
+        // Logic toggle status action
+        const newStatus = currentStatus === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
+        try {
+            await axiosInstance.put(`/my-work/action/${actionId}/status`, null, {
+                params: {staffId: currentStaffId, status: newStatus} //
+            });
+            // Refresh lại dữ liệu plan hiện tại
+            fetchPlanDetails(selectedPlan.id);
+        } catch (error) {
+            alert("Lỗi cập nhật action: " + error.message);
+        }
+    };
+
+    const handleOpenCreateAction = (taskId) => {
+        setTargetTaskId(taskId);
+        setNewAction({name: '', description: '', deadline: new Date().toISOString().split('T')[0]});
+        setShowActionModal(true);
+    };
+
+    const handleSubmitAction = async () => {
+        if (!newAction.name) return alert("Vui lòng nhập tên hành động");
+
+        try {
+            // Gọi API tạo Action
+            const payload = {
+                taskId: targetTaskId,
+                name: newAction.name,
+                description: newAction.description,
+                deadline: newAction.deadline,
+                executors: [{id: currentStaffId}] // Tự giao cho chính mình hoặc cần logic chọn người (ở đây mặc định assign cho user hiện tại)
+            };
+
+            await axiosInstance.post('/task/action', payload);
+            setShowActionModal(false);
+            fetchPlanDetails(selectedPlan.id); // Refresh
+        } catch (error) {
+            console.error(error);
+            alert("Lỗi tạo action");
+        }
+    };
+
+    // --- RENDER ---
+
+    return (<div className={styles.container}>
+        {/* Header chung & Chọn nhân vật */}
+        <div className={styles.topBar}>
+            <h2>{viewMode === 'list' ? 'Danh sách Kế hoạch của tôi' : `Chi tiết: ${selectedPlan?.name}`}</h2>
+            <div className={styles.impersonate}>
+                <label>User:</label>
+                <select value={currentStaffId} onChange={e => setCurrentStaffId(e.target.value)}>
+                    {staffList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+            </div>
+        </div>
+
+        {/* VIEW 1: PLAN LIST */}
+        {viewMode === 'list' && (<div className={styles.planGrid}>
+            {loading && <p>Đang tải...</p>}
+            {!loading && myPlans.length === 0 && <p className={styles.empty}>Bạn chưa tham gia kế hoạch nào.</p>}
+            {myPlans.map(plan => (<div key={plan.id} className={styles.planCard} onClick={() => handlePlanClick(plan)}>
+                <div className={styles.planIcon}>📁</div>
+                <div className={styles.planInfo}>
+                    <h3>{plan.name}</h3>
+                    <p>{plan.startMonth} - {plan.endMonth}</p>
+                    <span className={styles.tag}>Xem chi tiết &rarr;</span>
                 </div>
-            </td>
-            <td>
-                <span className={styles.executor}>{action.executor}</span>
-            </td>
-            <td>
-                <span className={styles.actionStatus}>
-                    {action.status}
-                </span>
-            </td>
-            <td>
-                {isMine ? (
-                    <div className={styles.controlCell}>
-                        <input
-                            type="number"
-                            className={styles.inputProgress}
-                            value={progress}
-                            onChange={handleProgressChange}
-                        />
-                        <span className={styles.percent}>%</span>
-                    </div>
-                ) : (
-                    <span className={styles.readOnlyText}>{action.progress}%</span>
-                )}
-            </td>
-        </tr>
-    );
+            </div>))}
+        </div>)}
+
+        {/* VIEW 2: PLAN DETAIL (Task Groups) */}
+        {viewMode === 'detail' && (<div className={styles.detailView}>
+            <button className={styles.backBtn} onClick={handleBackToList}>&larr; Quay lại danh sách</button>
+
+            {loading && <div className={styles.loading}>Đang tải chi tiết kế hoạch...</div>}
+
+            <div className={styles.taskGroupList}>
+                {planTaskGroups.map((group) => (<TaskGroupItem
+                    key={group.uuid}
+                    group={group}
+                    onToggleAction={handleToggleAction}
+                    onCreateAction={handleOpenCreateAction}
+                />))}
+            </div>
+        </div>)}
+
+        {/* MODAL CREATE ACTION */}
+        {showActionModal && (<div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+                <h3>Thêm hành động mới</h3>
+                <div className={styles.formGroup}>
+                    <label>Tên hành động:</label>
+                    <input
+                        type="text"
+                        value={newAction.name}
+                        onChange={e => setNewAction({...newAction, name: e.target.value})}
+                        placeholder="Nhập tên việc cần làm..."
+                    />
+                </div>
+                <div className={styles.formGroup}>
+                    <label>Mô tả:</label>
+                    <textarea
+                        value={newAction.description}
+                        onChange={e => setNewAction({...newAction, description: e.target.value})}
+                    />
+                </div>
+                <div className={styles.formGroup}>
+                    <label>Deadline:</label>
+                    <input
+                        type="date"
+                        value={newAction.deadline}
+                        onChange={e => setNewAction({...newAction, deadline: e.target.value})}
+                    />
+                </div>
+                <div className={styles.modalActions}>
+                    <button className={styles.cancelBtn} onClick={() => setShowActionModal(false)}>Hủy</button>
+                    <button className={styles.confirmBtn} onClick={handleSubmitAction}>Tạo mới</button>
+                </div>
+            </div>
+        </div>)}
+    </div>);
+};
+
+// --- SUB COMPONENT: Task Group Item (Accordion) ---
+const TaskGroupItem = ({group, onToggleAction, onCreateAction}) => {
+    const [expanded, setExpanded] = useState(false);
+
+    // Lấy task mới nhất trong group để hiển thị info chính
+    const primaryTask = group.tasks && group.tasks.length > 0 ? group.tasks[0] : null;
+
+    if (!primaryTask) return null;
+
+    // Fetch Actions của Task này (Giả sử BE trả về Actions kèm trong TaskDTO hoặc gọi API riêng)
+    // Ở cấu trúc cũ, Action nằm trong Task? Kiểm tra TaskDTO.java -> Không thấy List<Action>.
+    // => Cần gọi API lấy action hoặc Backend đã cập nhật TaskDTO chứa actions.
+    // **GIẢ ĐỊNH QUAN TRỌNG:** Để UI hoạt động mượt, ta giả định API `getTasksByPlan` đã được chỉnh sửa để return kèm Actions,
+    // HOẶC ta phải gọi API `getActionsByTask` ở đây.
+    // Để tối ưu, ta sẽ dùng Component `ActionList` tự fetch actions nếu chưa có.
+
+    return (<div className={`${styles.taskGroup} ${expanded ? styles.expanded : ''}`}>
+        <div className={styles.groupHeader} onClick={() => setExpanded(!expanded)}>
+            <span className={styles.toggleIcon}>{expanded ? '▼' : '▶'}</span>
+            <div className={styles.groupInfo}>
+                <span className={styles.groupName}>{primaryTask.name}</span>
+                <span className={styles.groupMeta}>
+                        {primaryTask.status} • {Math.round(primaryTask.progress * 100)}%
+                    </span>
+            </div>
+        </div>
+
+        {expanded && (<div className={styles.groupBody}>
+            <p className={styles.desc}>{primaryTask.description || 'Không có mô tả'}</p>
+            <div className={styles.metaRow}>
+                <span><strong>Deadline:</strong> {primaryTask.currentDeadline || primaryTask.initialDeadline}</span>
+                <span><strong>Tháng:</strong> {primaryTask.month}</span>
+            </div>
+
+            {/* ACTION SECTION */}
+            <div className={styles.actionSection}>
+                <div className={styles.actionHeader}>
+                    <h4>Checklist / Hành động</h4>
+                    <button
+                        className={styles.addTimeBtn}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onCreateAction(primaryTask.id);
+                        }}
+                    >
+                        + Thêm Action
+                    </button>
+                </div>
+
+                {/* Render Actions */}
+                <ActionListFetcher taskId={primaryTask.id} onToggle={onToggleAction}/>
+            </div>
+        </div>)}
+    </div>);
+};
+
+// --- SUB COMPONENT: Fetch Actions riêng lẻ để đảm bảo dữ liệu mới nhất ---
+const ActionListFetcher = ({taskId, onToggle}) => {
+    const [actions, setActions] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchActions = async () => {
+            try {
+                // API lấy action theo task
+                const res = await axiosInstance.get(`/task/action/task/${taskId}`);
+                setActions(res.data);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchActions();
+    }, [taskId]); // Reload khi taskId thay đổi. *Lưu ý: Khi cha add action xong, cần trigger reload ở đây.
+                  // (Simplification: Trong code production nên dùng context hoặc lift state up,
+                  // ở đây user chấp nhận reload bằng cách đóng/mở lại accordion hoặc switch tab để refresh).
+
+    if (loading) return <small>Loading actions...</small>;
+    if (actions.length === 0) return <small style={{color: '#999'}}>Chưa có hành động nào.</small>;
+
+    return (<ul className={styles.actionList}>
+        {actions.map(action => (<li key={action.id} className={action.status === 'COMPLETED' ? styles.done : ''}>
+            <label>
+                <input
+                    type="checkbox"
+                    checked={action.status === 'COMPLETED'}
+                    onChange={() => onToggle(action.id, action.status)}
+                />
+                <span className={styles.actName}>{action.name}</span>
+            </label>
+            <span className={styles.actDate}>{action.deadline}</span>
+        </li>))}
+    </ul>);
 };
 
 export default TaskManagement;
